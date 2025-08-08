@@ -1,0 +1,37 @@
+import re
+import string
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+
+# Download required NLTK resources (only once)
+nltk.download('punkt')
+nltk.download('stopwords')
+
+# Initialize stemmer and stop words
+stemmer = PorterStemmer()
+stop_words = set(stopwords.words('english'))
+
+def preprocess_text(text):
+    # 1. Lowercase the text
+    text = text.lower()
+    
+    # 2. Remove punctuation
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    
+    # 3. Tokenize
+    tokens = word_tokenize(text)
+    
+    # 4. Remove stop words
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+    
+    # 5. Apply stemming
+    stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
+    
+    return stemmed_tokens
+
+# Example usage
+sample_text = "Feeling overwhelmed and anxious lately. Can't focus on anything!"
+processed = preprocess_text(sample_text)
+print(processed)

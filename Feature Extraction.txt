@@ -1,0 +1,58 @@
+import gensim
+from gensim.models import KeyedVectors
+
+# Load pretrained FastText vectors (English)
+# Download from: https://fasttext.cc/docs/en/english-vectors.html
+fasttext_model = KeyedVectors.load_word2vec_format('cc.en.300.vec.gz', binary=False)
+
+def get_fasttext_embedding(tokens):
+    return [fasttext_model[word] for word in tokens if word in fasttext_model]
+
+import numpy as np
+
+# Load GloVe embeddings
+def load_glove_model(glove_file):
+    glove_model = {}
+    with open(glove_file, 'r', encoding='utf8') as f:
+        for line in f:
+            parts = line.strip().split()
+            word = parts[0]
+            vector = np.array(parts[1:], dtype='float32')
+            glove_model[word] = vector
+    return glove_model
+
+glove_model = load_glove_model("glove.6B.300d.txt")  # Download from https://nlp.stanford.edu/projects/glove/
+
+def get_glove_embedding(tokens):
+    return [glove_model[word] for word in tokens if word in glove_model]
+
+# Install DeepMoji dependencies
+# pip install git+https://github.com/bfelbo/DeepMoji.git
+
+from deepmoji.model_def import deepmoji_emojis
+from deepmoji.sentence_tokenizer import SentenceTokenizer
+
+# Load pretrained DeepMoji model
+model_path = 'deepmoji_model.hdf5'  # Download from https://github.com/bfelbo/DeepMoji
+vocab_path = 'deepmoji_vocab.json'
+
+st = SentenceTokenizer(vocab_path, maxlen=30)
+model = deepmoji_emojis(model_path)
+
+def get_deepmoji_embedding(text):
+    tokenized, _, _ = st.tokenize_sentences([text])
+    return model.predict(tokenized)
+
+from transformers import XLNetTokenizer, XLNetModel
+import torch
+
+# Load XLNet
+tokenizer = XLNetTokenizer.from_pretrained('xlnet-base-cased')
+model = XLNetModel.from_pretrained('xlnet-base-cased')
+
+def get_xlnet_embedding(text):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    # Use the last hidden state
+    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
